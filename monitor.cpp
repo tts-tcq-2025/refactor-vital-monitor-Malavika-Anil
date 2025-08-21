@@ -7,7 +7,7 @@ using std::cout, std::flush, std::this_thread::sleep_for, std::chrono::seconds;
 void flush() {
  for (int i = 0; i < 6; i++) {
   for(int i = 0; i < 1; i++) {
-   cout <<"\r* "<< flush;
+   cout << "\r* "<< flush;
    sleep_for(seconds(1)); } } }
 int vitalsOk(float temperature, float pulseRate, float spo2) {
  if (temperature > 102 || temperature < 95) {
