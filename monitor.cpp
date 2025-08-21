@@ -19,6 +19,6 @@ else if (pulseRate < 60 || pulseRate > 100)
 flush(); }
 return 0; }
 else if (spo2 < 90)
-{cout << "Oxygen Saturation out of range!\n"; }
+{cout << "Oxygen Saturation out of range!\n";
 return 0; }
 return 1; }
