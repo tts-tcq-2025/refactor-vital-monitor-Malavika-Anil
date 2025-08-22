@@ -10,12 +10,12 @@ constexpr float SPO2_LOW=90.0f;
 constexpr int ALERT_BLINKS=6;
 
 static void showAlert(){
-  for(int i=0;i<ALERT_BLINKS;i++){
-    cout<<"\r* "<<flush;
-    sleep_for(seconds(1));
-    cout<<"\r *"<<flush;
-    sleep_for(seconds(1));
-  }
+for(int i=0;i<ALERT_BLINKS;i++){
+for(int i=0;i<ALERT_BLINKS;i++){
+cout<<"\r* "<<flush;
+sleep_for(seconds(1));
+}
+}
   cout<<"\n";
 }
 
