@@ -21,21 +21,18 @@ void showAlertAnimation(){
   cout<<"\n";
 }
 
+int checkAndAlert(bool condition,const char* message){
+  if(condition){
+    cout<<message<<"\n";
+    showAlertAnimation();
+    return 0;
+  }
+  return 1;
+}
+
 int vitalsOk(float temperature,float pulseRate,float spo2){
-  if(temperature>TEMP_HIGH||temperature<TEMP_LOW){
-    cout<<"Temperature is critical!\n";
-    showAlertAnimation();
-    return 0;
-  }
-  if(pulseRate<PULSE_LOW||pulseRate>PULSE_HIGH){
-    cout<<"Pulse Rate is out of range!\n";
-    showAlertAnimation();
-    return 0;
-  }
-  if(spo2<SPO2_LOW){
-    cout<<"Oxygen Saturation is out of range!\n";
-    showAlertAnimation();
-    return 0;
-  }
+  if(!checkAndAlert(temperature>TEMP_HIGH||temperature<TEMP_LOW,"Temperature is critical!"))return 0;
+  if(!checkAndAlert(pulseRate<PULSE_LOW||pulseRate>PULSE_HIGH,"Pulse Rate is out of range!"))return 0;
+  if(!checkAndAlert(spo2<SPO2_LOW,"Oxygen Saturation is out of range!"))return 0;
   return 1;
 }
