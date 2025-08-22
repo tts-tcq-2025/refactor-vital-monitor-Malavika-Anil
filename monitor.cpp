@@ -26,11 +26,16 @@ static void blinkAlert(){
 }
 
 int vitalsOk(float temperature,float pulseRate,float spo2){
+  bool tempBad=(temperature>TEMP_HIGH)||(temperature<TEMP_LOW);
+  bool pulseBad=(pulseRate<PULSE_LOW)||(pulseRate>PULSE_HIGH);
+  bool spo2Bad=(spo2<SPO2_MIN);
+
   std::array<Vital,3> checks{{
-    {temperature>TEMP_HIGH||temperature<TEMP_LOW,"Temperature is critical!"},
-    {pulseRate<PULSE_LOW||pulseRate>PULSE_HIGH,"Pulse Rate is out of range!"},
-    {spo2<SPO2_MIN,"Oxygen Saturation out of range!"}
+    {tempBad,"Temperature is critical!"},
+    {pulseBad,"Pulse Rate is out of range!"},
+    {spo2Bad,"Oxygen Saturation out of range!"}
   }};
+
   for(const auto& v:checks){
     if(v.bad){cout<<v.message<<"\n";blinkAlert();return NOT_OK;}
   }
