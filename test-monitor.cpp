@@ -1,13 +1,14 @@
 #include <gtest/gtest.h>
 #include "./monitor.h"
-
-TEST(MonitorTest,VitalsChecks){
-  EXPECT_FALSE(vitalsOk(99,102,70));   // pulse high + spo2 low
-  EXPECT_FALSE(vitalsOk(103,80,95));   // temp high
-  EXPECT_FALSE(vitalsOk(94,80,95));    // temp low
-  EXPECT_FALSE(vitalsOk(98.6,55,95));  // pulse low
-  EXPECT_FALSE(vitalsOk(98.6,75,85));  // spo2 low
-  EXPECT_TRUE(vitalsOk(98.1,70,98));   // all normal
+ 
+TEST(Monitor, NotOkWhenAnyVitalIsOffRange) {
+  ASSERT_FALSE(vitalsOk(99, 102, 70));
+  ASSERT_TRUE(vitalsOk(98.1, 70, 98));
+  ASSERT_TRUE(vitalsOk(95, 60, 90));
+  ASSERT_TRUE(vitalsOk(102, 100, 90));
+  ASSERT_FALSE(vitalsOk(94, 59, 89));
+  ASSERT_FALSE(vitalsOk(103, 101, 91));
+  ASSERT_TRUE(vitalsOk(101, 100, 90));
+  ASSERT_TRUE(vitalsOk(96, 100, 90));
 }
-
 
