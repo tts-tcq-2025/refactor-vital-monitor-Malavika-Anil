@@ -10,5 +10,6 @@ int spo2Ok(int spo2);
 // Declare combined vital check
 int vitalsOk(float temperature, int pulseRate, int spo2);
 
-#endif // MONITOR_H
+#endif
+
 
