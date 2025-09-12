@@ -40,20 +40,20 @@ int checkRange(float value, float min, float max, const std::string& vitalName) 
 }
 
 // Vitals-specific checks
-int tempOk(float temperature) {
+bool tempOk(float temperature) {
     return checkRange(temperature, TEMP_LOW, TEMP_HIGH, "Temperature");
 }
 
-int pulseRateOk(float pulseRate) {
+bool pulseRateOk(float pulseRate) {
     return checkRange(pulseRate, PULSE_LOW, PULSE_HIGH, "Pulse Rate");
 }
 
-int spo2Ok(float spo2) {
+bool spo2Ok(float spo2) {
     // only lower bound matters for SpO2
     return checkRange(spo2, SPO2_MIN, 9999.0f, "Oxygen Saturation");
 }
 
 // Final combined check
-int vitalsOk(float temperature, float pulseRate, float spo2) {
+bool vitalsOk(float temperature, float pulseRate, float spo2) {
     return tempOk(temperature) && pulseRateOk(pulseRate) && spo2Ok(spo2);
 }
