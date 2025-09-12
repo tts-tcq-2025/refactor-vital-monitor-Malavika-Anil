@@ -1,43 +1,70 @@
-#include "./monitor.h"
-#include <iostream>
-#include <thread>
-#include <chrono>
-#include <array>
-using std::cout;using std::flush;using std::this_thread::sleep_for;using std::chrono::seconds;
+#include "monitor.h" 
+#include <iostream>  
+#include <thread>    
 
-constexpr float TEMP_LOW=95.0f,TEMP_HIGH=102.0f;
-constexpr float PULSE_LOW=60.0f,PULSE_HIGH=100.0f;
-constexpr float SPO2_MIN=90.0f;
-constexpr int OK=1,NOT_OK=0,ALERT_BLINKS=6;
+namespace VitalMonitoring {
 
-struct Vital{
-  bool bad;
-  const char* message;
-};
+    // --- ConsoleVitalReporter Implementation ---
+    void ConsoleVitalReporter::displayCriticalAlertAnimation() {
+        for (int i = 0; i < VitalMonitoring::AlertSettings::FLASH_COUNT; ++i) {
+            std::cout << "\r* " << std::flush;
+            std::this_thread::sleep_for(VitalMonitoring::AlertSettings::FLASH_DELAY);
+            std::cout << "\r *" << std::flush;
+            std::this_thread::sleep_for(VitalMonitoring::AlertSettings::FLASH_DELAY);
+        }
+    }
 
-static void blinkAlert(){
-  bool state=false;
-  for(int i=0;i<ALERT_BLINKS*2;i++){
-    cout<<"\r"<<(state?"* ":" *")<<flush;
-    state=!state;
-    sleep_for(seconds(1));
-  }
-  cout<<"\r  \r"<<flush;
-}
+    void ConsoleVitalReporter::reportCritical(VitalType type, float value, const std::string& message) {
+        std::cout << message << " (Value: " << value << ")\n";
+        displayCriticalAlertAnimation();
+    }
 
-int vitalsOk(float temperature,float pulseRate,float spo2){
-  bool tempBad=(temperature>TEMP_HIGH)||(temperature<TEMP_LOW);
-  bool pulseBad=(pulseRate<PULSE_LOW)||(pulseRate>PULSE_HIGH);
-  bool spo2Bad=(spo2<SPO2_MIN);
+    IVitalReporter* getDefaultConsoleReporter() {
+        static ConsoleVitalReporter reporter; // Static to ensure single instance and lifetime
+        return &reporter;
+    }
 
-  std::array<Vital,3> checks{{
-    {tempBad,"Temperature is critical!"},
-    {pulseBad,"Pulse Rate is out of range!"},
-    {spo2Bad,"Oxygen Saturation out of range!"}
-  }};
+    bool checkTemperature(float temperature, IVitalReporter* reporter) {
+        if (temperature > VitalRanges::TEMP_CRITICAL_HIGH || temperature < VitalRanges::TEMP_CRITICAL_LOW) {
+            reporter->reportCritical(VitalType::Temperature, temperature, "Temperature is critical!");
+            return false;
+        }
+        return true;
+    }
 
-  for(const auto& v:checks){
-    if(v.bad){cout<<v.message<<"\n";blinkAlert();return NOT_OK;}
-  }
-  return OK;
+    bool checkPulseRate(float pulseRate, IVitalReporter* reporter) {
+        if (pulseRate < VitalRanges::PULSE_RATE_CRITICAL_LOW || pulseRate > VitalRanges::PULSE_RATE_CRITICAL_HIGH) {
+            reporter->reportCritical(VitalType::PulseRate, pulseRate, "Pulse Rate is out of range!");
+            return false;
+        }
+        return true;
+    }
+
+    bool checkSpo2(float spo2, IVitalReporter* reporter) {
+        if (spo2 < VitalRanges::SPO2_CRITICAL_LOW) {
+            reporter->reportCritical(VitalType::SPO2, spo2, "Oxygen Saturation out of range!");
+            return false;
+        }
+        return true;
+    }
+
+} 
+// --- Main vitalsOk Function (Global Namespace) ---
+int vitalsOk(float temperature, float pulseRate, float spo2, VitalMonitoring::IVitalReporter* reporter) {
+    if (!reporter) {
+        reporter = VitalMonitoring::getDefaultConsoleReporter();
+    }
+
+    // Check each vital using the helper functions and provided/default reporter
+    if (!VitalMonitoring::checkTemperature(temperature, reporter)) {
+        return 0;
+    }
+    if (!VitalMonitoring::checkPulseRate(pulseRate, reporter)) {
+        return 0;
+    }
+    if (!VitalMonitoring::checkSpo2(spo2, reporter)) {
+        return 0;
+    }
+
+    return 1; // All vitals are within the healthy range
 }
