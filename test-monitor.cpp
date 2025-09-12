@@ -1,9 +1,12 @@
-#include 
-#include 
+#include <gtest/gtest.h>
+#include "monitor.h" // Includes vitalsOk, IVitalReporter, VitalType, etc.
 
 #include <vector>
 #include <string>
 
+// --- MockVitalReporter for Testing ---
+// This class implements the IVitalReporter interface for testing purposes.
+// It captures reported issues instead of printing to console or sleeping.
 class MockVitalReporter : public VitalMonitoring::IVitalReporter {
 public:
     struct ReportEntry {
@@ -23,13 +26,17 @@ public:
     }
 };
 
+// --- Test Fixture ---
+// A Google Test fixture to set up common test environment (e.g., a clean mock reporter for each test).
 class MonitorTest : public ::testing::Test {
 protected:
     MockVitalReporter mockReporter;
     void SetUp() override {
-        mockReporter.clear();
+        mockReporter.clear(); // Ensure mock reporter is clean at the start of each test
     }
 };
+
+// --- Test Cases ---
 
 TEST_F(MonitorTest, NotOkWhenAnyVitalIsOffRange) {
     // Test case 1: Temperature is out of range (high)
@@ -65,7 +72,8 @@ TEST_F(MonitorTest, OkWhenAllVitalsAreInRange) {
     ASSERT_EQ(1, vitalsOk(95.1f, 60.1f, 90.1f, &mockReporter)); // Boundary checks for low values
     ASSERT_TRUE(mockReporter.reportedIssues.empty());
 
-    ASSERT_EQ(1, vitalsOk(101.9f, 99.9f, 100.0f)); // Boundary checks for high values
-    ASSERT_TRUE(mockReporter.reportedIssues.empty());
+    ASSERT_EQ(1, vitalsOk(101.9f, 99.9f, 100.0f)); // Boundary checks for high values (uses default reporter)
+    ASSERT_TRUE(mockReporter.reportedIssues.empty()); // The mockReporter is NOT used here, so it remains empty.
+                                                     // If you want to test default reporter's behavior,
+                                                     // you'd need a way to capture std::cout, which is more complex.
 }
-
