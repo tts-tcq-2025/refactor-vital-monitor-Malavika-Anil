@@ -21,7 +21,7 @@ void blinkAlert() {
         cout << "\r *" << flush;
         sleep_for(seconds(1));
     }
-    cout << "\r  \r" << flush;  // Clear line after alert
+    cout << "\r  \r" << flush;  
 }
 
 // Generic alert function
