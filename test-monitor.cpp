@@ -1,79 +1,37 @@
 #include <gtest/gtest.h>
-#include "monitor.h" // Includes vitalsOk, IVitalReporter, VitalType, etc.
+#include "./monitor.h"
 
-#include <vector>
-#include <string>
-
-// --- MockVitalReporter for Testing ---
-// This class implements the IVitalReporter interface for testing purposes.
-// It captures reported issues instead of printing to console or sleeping.
-class MockVitalReporter : public VitalMonitoring::IVitalReporter {
-public:
-    struct ReportEntry {
-        VitalMonitoring::VitalType type;
-        float value;
-        std::string message;
-    };
-
-    std::vector<ReportEntry> reportedIssues;
-
-    void reportCritical(VitalMonitoring::VitalType type, float value, const std::string& message) override {
-        reportedIssues.push_back({type, value, message});
-    }
-
-    void clear() {
-        reportedIssues.clear();
-    }
-};
-
-// --- Test Fixture ---
-// A Google Test fixture to set up common test environment (e.g., a clean mock reporter for each test).
-class MonitorTest : public ::testing::Test {
-protected:
-    MockVitalReporter mockReporter;
-    void SetUp() override {
-        mockReporter.clear(); // Ensure mock reporter is clean at the start of each test
-    }
-};
-
-// --- Test Cases ---
-
-TEST_F(MonitorTest, NotOkWhenAnyVitalIsOffRange) {
-    // Test case 1: Temperature is out of range (high)
-    ASSERT_EQ(0, vitalsOk(103.0f, 70.0f, 98.0f, &mockReporter));
-    ASSERT_EQ(1, mockReporter.reportedIssues.size());
-    ASSERT_EQ(VitalMonitoring::VitalType::Temperature, mockReporter.reportedIssues[0].type);
-    ASSERT_EQ("Temperature is critical!", mockReporter.reportedIssues[0].message);
-    mockReporter.clear(); // Clear for next sub-test within this test function
-
-    // Test case 2: Pulse Rate is out of range (high)
-    ASSERT_EQ(0, vitalsOk(98.0f, 102.0f, 98.0f, &mockReporter));
-    ASSERT_EQ(1, mockReporter.reportedIssues.size());
-    ASSERT_EQ(VitalMonitoring::VitalType::PulseRate, mockReporter.reportedIssues[0].type);
-    ASSERT_EQ("Pulse Rate is out of range!", mockReporter.reportedIssues[0].message);
-    mockReporter.clear();
-
-    // Test case 3: Oxygen Saturation is out of range (low)
-    ASSERT_EQ(0, vitalsOk(98.0f, 70.0f, 70.0f, &mockReporter));
-    ASSERT_EQ(1, mockReporter.reportedIssues.size());
-    ASSERT_EQ(VitalMonitoring::VitalType::SPO2, mockReporter.reportedIssues[0].type);
-    ASSERT_EQ("Oxygen Saturation out of range!", mockReporter.reportedIssues[0].message);
-    mockReporter.clear();
-
-    // Test case 4: All vitals are within range - no issues should be reported
-    ASSERT_EQ(1, vitalsOk(98.1f, 70.0f, 98.0f, &mockReporter));
-    ASSERT_TRUE(mockReporter.reportedIssues.empty());
+// Temperature Tests
+TEST(TemperatureTest, BoundaryAndOutOfRange) {
+    EXPECT_EQ(tempOk(95), 1);     // Lower bound
+    EXPECT_EQ(tempOk(102), 1);    // Upper bound
+    EXPECT_EQ(tempOk(94.9), 0);   // Below range
+    EXPECT_EQ(tempOk(102.1), 0);  // Above range
 }
 
-TEST_F(MonitorTest, OkWhenAllVitalsAreInRange) {
-    ASSERT_EQ(1, vitalsOk(98.6f, 75.0f, 95.0f, &mockReporter));
-    ASSERT_TRUE(mockReporter.reportedIssues.empty());
+// Pulse Rate Tests
+TEST(PulseRateTest, BoundaryAndOutOfRange) {
+    EXPECT_EQ(pulseRateOk(60), 1);     // Lower bound
+    EXPECT_EQ(pulseRateOk(100), 1);    // Upper bound
+    EXPECT_EQ(pulseRateOk(59), 0);     // Below range
+    EXPECT_EQ(pulseRateOk(101), 0);    // Above range
+}
 
-    ASSERT_EQ(1, vitalsOk(95.1f, 60.1f, 90.1f, &mockReporter)); // Boundary checks for low values
-    ASSERT_TRUE(mockReporter.reportedIssues.empty());
+// SpO2 Tests
+TEST(SpO2Test, MinimumCheck) {
+    EXPECT_EQ(spo2Ok(90), 1);     // Minimum valid
+    EXPECT_EQ(spo2Ok(95), 1);     // Normal valid
+    EXPECT_EQ(spo2Ok(89), 0);     // Below valid
+}
 
-    ASSERT_EQ(1, vitalsOk(101.9f, 99.9f, 100.0f)); // Boundary checks for high values (uses default reporter)
-    ASSERT_TRUE(mockReporter.reportedIssues.empty()); // The mockReporter is NOT used here, so it remains empty.
-                                                     // If you want to test default reporter's behavior,
-                                                     // you'd need a way to capture std::cout, which is more complex.
+// Combined Vitals Tests
+TEST(Monitor, CombinedVitals) {
+    EXPECT_FALSE(vitalsOk(99, 102, 70));     // Pulse high
+    EXPECT_TRUE(vitalsOk(98.1, 70, 98));     // All good
+    EXPECT_TRUE(vitalsOk(95, 60, 90));       // Boundaries valid
+    EXPECT_TRUE(vitalsOk(102, 100, 90));     // Boundaries valid
+    EXPECT_FALSE(vitalsOk(94, 59, 89));      // All low
+    EXPECT_FALSE(vitalsOk(103, 101, 91));    // Temp & pulse high
+    EXPECT_TRUE(vitalsOk(101, 100, 90));     // High boundary valid
+    EXPECT_TRUE(vitalsOk(96, 100, 90));      // Edge valid
 }
