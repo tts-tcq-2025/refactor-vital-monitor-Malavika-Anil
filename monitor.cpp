@@ -5,14 +5,11 @@
 #include <string>
 
 using std::cout, std::flush, std::this_thread::sleep_for, std::chrono::seconds;
-
-// Constants
 constexpr float TEMP_LOW   = 95.0f;
 constexpr float TEMP_HIGH  = 102.0f;
 constexpr float PULSE_LOW  = 60.0f;
 constexpr float PULSE_HIGH = 100.0f;
 constexpr float SPO2_MIN   = 90.0f;
-
 constexpr int OK     = 1;
 constexpr int NOT_OK = 0;
 
